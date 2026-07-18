@@ -1,0 +1,68 @@
+[
+  {
+    "id": "prod_1",
+    "name": "Bacfix Thick Bleach",
+    "description": "Lemon Fresh Multipurpose Thick Bleach. Delivers powerful deep cleaning action to remove tough stains, eliminate germs, and leave toilet bowls and hard surfaces sparkling clean with a fresh lemon aroma.",
+    "imageUrl": "/uploads/thick_bleach.jpg"
+  },
+  {
+    "id": "prod_2",
+    "name": "Bacfix All Purpose Cleaner",
+    "description": "Lemon scented premium all-purpose liquid cleaner. Highly effective multi-surface formula designed to lift grease, grime, and household dirt from floors, walls, kitchens, and bathrooms.",
+    "imageUrl": "/uploads/all_purpose_cleaner.jpg"
+  },
+  {
+    "id": "prod_3",
+    "name": "Bacfix Pine Gel",
+    "description": "High-quality concentrated antiseptic pine gel cleaner. Formulated with natural pine oil to sanitize, clean, and deodorize surfaces in hospitals, schools, homes, and offices.",
+    "imageUrl": "/uploads/pine_gel.jpg"
+  },
+  {
+    "id": "prod_4",
+    "name": "Bacfix Dishwashing Liquid",
+    "description": "Premium grease-cutting Hand Wash and dishwashing liquid with a fresh lemon scent. Gently formulated yet ultra-concentrated to cut through tough oils, fat, and food residues, leaving your plates and cookware sparkling clean.",
+    "imageUrl": "/uploads/dishwashing_liquid.jpg"
+  },
+  {
+    "id": "prod_5",
+    "name": "Bacfix Deodorant Blocks",
+    "description": "Effective deodorizer blocks (72 tablets). Eliminates odours from urinals, gym lockers, closets, and storage sheds.",
+    "imageUrl": "/uploads/deodorant_blocks.jpg"
+  },
+  {
+    "id": "prod_6",
+    "name": "Bacfix Toilet Cleaner 25L",
+    "description": "Heavy-duty 25L industrial toilet cleaner. Powerful formula designed to remove stubborn stains, lime scale, and rust from toilet bowls and urinals while killing germs and leaving a fresh scent.",
+    "imageUrl": "/uploads/toilet_cleaner.jpg"
+  },
+  {
+    "id": "prod_7",
+    "name": "Bacfix Washing Powder 25kg",
+    "description": "Heavy-duty 25kg industrial washing powder. Powerful stain-removing formula that deep cleans clothes, removes tough stains, and leaves fabrics smelling fresh. Ideal for commercial laundries, hotels, and large households.",
+    "imageUrl": "/uploads/washing_powder.jpg"
+  },
+  {
+    "id": "prod_8",
+    "name": "Bacfix Bleach 25L",
+    "description": "Heavy-duty 25L industrial bleach. Powerful formula for bleaching, disinfecting, and sanitizing. Kills 99.9% of germs and bacteria, leaving surfaces bright and hygienic.",
+    "imageUrl": "/uploads/bacfix_bleach.jpg"
+  },
+  {
+    "id": "prod_9",
+    "name": "Bacfix White Floor Polish Wax 20L",
+    "description": "Premium 20L white floor polish wax paste. Provides a durable, high-gloss protective finish for all sealed hard floors. Scuff and slip-resistant formula that keeps floors looking brilliant.",
+    "imageUrl": "/uploads/white_floor_polish_wax.jpg"
+  },
+  {
+    "id": "prod_10",
+    "name": "Industrial Cleaning Mop",
+    "description": "Heavy-duty industrial cleaning mop with highly absorbent cotton/microfiber head and a sturdy handle, ideal for commercial cleaning and large floor surfaces.",
+    "imageUrl": "/uploads/mop.jpg"
+  },
+  {
+    "id": "prod_11",
+    "name": "Industrial Sweeping Broom",
+    "description": "Heavy-duty industrial sweeping broom featuring thick, durable bristles and a strong handle, designed to sweep large spaces and tough debris efficiently.",
+    "imageUrl": "/uploads/broom.jpg"
+  }
+]

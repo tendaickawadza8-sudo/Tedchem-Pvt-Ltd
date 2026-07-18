@@ -1,0 +1,6 @@
+{
+  "name": "Tedchem Pvt Ltd",
+  "description": "A modern, premium global business website for Tedchem Pvt Ltd, featuring a product catalog with a secure administration dashboard, live updates, and direct contact inquiry system.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

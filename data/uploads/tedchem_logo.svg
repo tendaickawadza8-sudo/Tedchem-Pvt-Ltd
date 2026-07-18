@@ -1,0 +1,23 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="green-region">
+      <path d="M 50 50 L 0 21.13 L 0 0 L 100 0 L 100 21.13 Z" />
+    </clipPath>
+    <clipPath id="blue-left-region">
+      <path d="M 50 50 L 0 21.13 L 0 100 L 50 100 Z" />
+    </clipPath>
+    <clipPath id="blue-right-region">
+      <path d="M 50 50 L 100 21.13 L 100 100 L 50 100 Z" />
+    </clipPath>
+  </defs>
+  
+  <g transform="translate(0, 5)">
+    <circle cx="50" cy="30" r="30" fill="#00FF00" clip-path="url(#green-region)" />
+    <circle cx="32.68" cy="60" r="30" fill="#0000FF" clip-path="url(#blue-left-region)" />
+    <circle cx="67.32" cy="60" r="30" fill="#0000FF" clip-path="url(#blue-right-region)" />
+    
+    <line x1="50" y1="50" x2="0" y2="21.13" stroke="white" stroke-width="2" />
+    <line x1="50" y1="50" x2="100" y2="21.13" stroke="white" stroke-width="2" />
+    <line x1="50" y1="50" x2="50" y2="100" stroke="white" stroke-width="2" />
+  </g>
+</svg>

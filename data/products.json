@@ -69,12 +69,12 @@
     "id": "prod_12",
     "name": "Latex Gloves",
     "description": "High-quality, durable latex gloves for medical, industrial, and general hygiene use. Provides excellent barrier protection and flexibility.",
-    "imageUrl": "/uploads/latex_gloves.jpg"
+    "imageUrl": "/uploads/latex_gloves_v2.jpg"
   },
   {
     "id": "prod_13",
     "name": "Disposable Face Masks",
     "description": "3-ply disposable face masks offering reliable filtration and breathability. Suitable for personal and professional daily protection.",
-    "imageUrl": "/uploads/face_masks.jpg"
+    "imageUrl": "/uploads/face_masks_v2.jpg"
   }
 ]

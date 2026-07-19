@@ -41,6 +41,8 @@ if (fs.existsSync(imagesSrcDir)) {
   const whiteFloorPolishFile = files.find(f => f.startsWith("bacfix_white_floor_polish_wax"));
   const mopFile = files.find(f => f.startsWith("industrial_mop"));
   const broomFile = files.find(f => f.startsWith("industrial_broom"));
+  const latexGlovesFile = files.find(f => f.startsWith("box_of_latex_gloves"));
+  const faceMasksFile = files.find(f => f.startsWith("box_of_face_masks"));
 
   if (logoFile) {
     fs.copyFileSync(path.join(imagesSrcDir, logoFile), path.join(UPLOADS_DIR, "tedchem_logo.svg"));
@@ -77,6 +79,12 @@ if (fs.existsSync(imagesSrcDir)) {
   }
   if (broomFile) {
     fs.copyFileSync(path.join(imagesSrcDir, broomFile), path.join(UPLOADS_DIR, "broom.jpg"));
+  }
+  if (latexGlovesFile) {
+    fs.copyFileSync(path.join(imagesSrcDir, latexGlovesFile), path.join(UPLOADS_DIR, "latex_gloves_v2.jpg"));
+  }
+  if (faceMasksFile) {
+    fs.copyFileSync(path.join(imagesSrcDir, faceMasksFile), path.join(UPLOADS_DIR, "face_masks_v2.jpg"));
   }
 }
 
@@ -167,13 +175,13 @@ if (!fs.existsSync(PRODUCTS_FILE)) {
       id: "prod_12",
       name: "Latex Gloves",
       description: "High-quality, durable latex gloves for medical, industrial, and general hygiene use. Provides excellent barrier protection and flexibility.",
-      imageUrl: fs.existsSync(path.join(UPLOADS_DIR, "latex_gloves.jpg")) ? "/uploads/latex_gloves.jpg" : "https://picsum.photos/seed/gloves/600/400"
+      imageUrl: fs.existsSync(path.join(UPLOADS_DIR, "latex_gloves_v2.jpg")) ? "/uploads/latex_gloves_v2.jpg" : "https://picsum.photos/seed/gloves/600/400"
     },
     {
       id: "prod_13",
       name: "Disposable Face Masks",
       description: "3-ply disposable face masks offering reliable filtration and breathability. Suitable for personal and professional daily protection.",
-      imageUrl: fs.existsSync(path.join(UPLOADS_DIR, "face_masks.jpg")) ? "/uploads/face_masks.jpg" : "https://picsum.photos/seed/masks/600/400"
+      imageUrl: fs.existsSync(path.join(UPLOADS_DIR, "face_masks_v2.jpg")) ? "/uploads/face_masks_v2.jpg" : "https://picsum.photos/seed/masks/600/400"
     }
   ];
   fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(defaultProducts, null, 2), "utf8");

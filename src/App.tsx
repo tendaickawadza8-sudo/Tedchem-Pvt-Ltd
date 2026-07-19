@@ -58,7 +58,7 @@ interface Inquiry {
 export default function App() {
   // Global State
   const [settings, setSettings] = useState<Settings>({
-    logoUrl: "",
+    logoUrl: "/uploads/tedchem_logo_v2.svg?v=2",
     companyName: "Tedchem Pvt Ltd",
     aboutUsText: "",
     address: "",
@@ -114,8 +114,8 @@ export default function App() {
   const fetchData = async () => {
     try {
       const [settingsRes, productsRes] = await Promise.all([
-        fetch("/api/settings"),
-        fetch("/api/products")
+        fetch(`/api/settings?t=${Date.now()}`),
+        fetch(`/api/products?t=${Date.now()}`)
       ]);
       const settingsData = await settingsRes.json();
       const productsData = await productsRes.json();
@@ -163,30 +163,12 @@ export default function App() {
     }
   }, [isAdmin]);
 
-  // Scroll tracking to update navigation highlights
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollPos = window.scrollY + 200;
-      if (contactRef.current && scrollPos >= contactRef.current.offsetTop) {
-        setActiveSection("contact");
-      } else if (aboutRef.current && scrollPos >= aboutRef.current.offsetTop) {
-        setActiveSection("about");
-      } else if (productsRef.current && scrollPos >= productsRef.current.offsetTop) {
-        setActiveSection("products");
-      } else {
-        setActiveSection("home");
-      }
-    };
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
-  const scrollTo = (ref: React.RefObject<HTMLDivElement | null>) => {
+  const navigateTo = (section: string) => {
     setMobileMenuOpen(false);
-    if (ref.current) {
-      ref.current.scrollIntoView({ behavior: "smooth" });
-    }
+    setActiveSection(section);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // Admin Actions
@@ -431,7 +413,7 @@ export default function App() {
       <header className="sticky top-0 bg-white/95 backdrop-blur-md shadow-sm z-40 border-b border-slate-200 transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
           {/* Logo & Brand */}
-          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => scrollTo(homeRef)}>
+          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => navigateTo("home")}>
             {settings.logoUrl ? (
               <img
                 src={settings.logoUrl}
@@ -445,22 +427,22 @@ export default function App() {
               </div>
             )}
             <div>
-              <span className="font-display font-extrabold text-lg tracking-tight text-teal-900 uppercase block leading-tight">
+              <span className="font-display font-extrabold text-lg tracking-tight uppercase block leading-tight">
                 {(() => {
                   const name = settings.companyName || "Tedchem Pvt Ltd";
                   const pvtIndex = name.toLowerCase().indexOf("pvt ltd");
                   if (pvtIndex !== -1) {
                     return (
                       <>
-                        {name.substring(0, pvtIndex)}
-                        <span className="font-light text-slate-500">{name.substring(pvtIndex)}</span>
+                        <span className="text-[#0000FF]">{name.substring(0, pvtIndex)}</span>
+                        <span className="font-light text-[#0000FF]">{name.substring(pvtIndex)}</span>
                       </>
                     );
                   }
-                  return name;
+                  return <span className="text-[#0000FF]">{name}</span>;
                 })()}
               </span>
-              <span className="text-[9px] uppercase tracking-widest font-sans font-bold text-slate-400 block -mt-0.5">
+              <span className="text-[9px] uppercase tracking-widest font-sans font-bold text-[#0000FF] block -mt-0.5">
                 Cleaning Detergents & Hygiene Solutions
               </span>
             </div>
@@ -469,7 +451,7 @@ export default function App() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8 h-full">
             <button
-              onClick={() => scrollTo(homeRef)}
+              onClick={() => navigateTo("home")}
               className={`text-xs font-semibold uppercase tracking-widest transition-all cursor-pointer h-full border-b-2 flex items-center pt-0.5 ${
                 activeSection === "home"
                   ? "text-teal-700 border-teal-700 font-bold"
@@ -479,7 +461,7 @@ export default function App() {
               Home
             </button>
             <button
-              onClick={() => scrollTo(productsRef)}
+              onClick={() => navigateTo("products")}
               className={`text-xs font-semibold uppercase tracking-widest transition-all cursor-pointer h-full border-b-2 flex items-center pt-0.5 ${
                 activeSection === "products"
                   ? "text-teal-700 border-teal-700 font-bold"
@@ -489,7 +471,7 @@ export default function App() {
               Products
             </button>
             <button
-              onClick={() => scrollTo(aboutRef)}
+              onClick={() => navigateTo("about")}
               className={`text-xs font-semibold uppercase tracking-widest transition-all cursor-pointer h-full border-b-2 flex items-center pt-0.5 ${
                 activeSection === "about"
                   ? "text-teal-700 border-teal-700 font-bold"
@@ -499,7 +481,7 @@ export default function App() {
               About Us
             </button>
             <button
-              onClick={() => scrollTo(contactRef)}
+              onClick={() => navigateTo("contact")}
               className={`text-xs font-semibold uppercase tracking-widest transition-all cursor-pointer h-full border-b-2 flex items-center pt-0.5 ${
                 activeSection === "contact"
                   ? "text-teal-700 border-teal-700 font-bold"
@@ -550,7 +532,7 @@ export default function App() {
             className="fixed inset-x-0 top-32 bg-white shadow-lg z-30 border-b border-slate-200 p-6 md:hidden flex flex-col space-y-4"
           >
             <button
-              onClick={() => scrollTo(homeRef)}
+              onClick={() => navigateTo("home")}
               className={`text-left py-2 text-base font-semibold border-b border-slate-100 ${
                 activeSection === "home" ? "text-teal-600" : "text-slate-700"
               }`}
@@ -558,7 +540,7 @@ export default function App() {
               Home
             </button>
             <button
-              onClick={() => scrollTo(productsRef)}
+              onClick={() => navigateTo("products")}
               className={`text-left py-2 text-base font-semibold border-b border-slate-100 ${
                 activeSection === "products" ? "text-teal-600" : "text-slate-700"
               }`}
@@ -566,7 +548,7 @@ export default function App() {
               Products Catalog
             </button>
             <button
-              onClick={() => scrollTo(aboutRef)}
+              onClick={() => navigateTo("about")}
               className={`text-left py-2 text-base font-semibold border-b border-slate-100 ${
                 activeSection === "about" ? "text-teal-600" : "text-slate-700"
               }`}
@@ -574,7 +556,7 @@ export default function App() {
               About Us
             </button>
             <button
-              onClick={() => scrollTo(contactRef)}
+              onClick={() => navigateTo("contact")}
               className={`text-left py-2 text-base font-semibold ${
                 activeSection === "contact" ? "text-teal-600" : "text-slate-700"
               }`}
@@ -586,8 +568,11 @@ export default function App() {
       </AnimatePresence>
 
       <main className="flex-grow">
-        {/* HERO SECTION */}
-        <div ref={homeRef} className="relative bg-teal-900 text-white py-24 sm:py-32 overflow-hidden">
+        {/* HOME SECTION */}
+        {activeSection === "home" && (
+        <div ref={homeRef}>
+          {/* HERO SECTION */}
+          <div className="relative bg-slate-900 text-white py-24 sm:py-32 overflow-hidden">
           {/* Subtle industrial blueprint decorative lines */}
           <div className="absolute inset-0 opacity-10 pointer-events-none">
             <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -597,8 +582,8 @@ export default function App() {
               <rect width="100%" height="100%" fill="url(#grid-hero)" />
             </svg>
           </div>
-          <div className="absolute -top-40 -right-40 w-96 h-96 bg-teal-500/20 rounded-full blur-3xl"></div>
-          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-slate-500/10 rounded-full blur-3xl"></div>
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl z-0"></div>
+          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-slate-500/10 rounded-full blur-3xl z-0"></div>
  
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             <div className="lg:col-span-7 space-y-6">
@@ -614,14 +599,14 @@ export default function App() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 pt-2">
                 <button
-                  onClick={() => scrollTo(productsRef)}
+                  onClick={() => navigateTo("products")}
                   className="bg-teal-500 hover:bg-teal-400 text-white px-6 py-3.5 rounded font-bold transition-all shadow-lg text-sm flex items-center justify-center gap-2 cursor-pointer"
                 >
                   Explore Products
                   <ArrowRight className="w-4 h-4" />
                 </button>
                 <button
-                  onClick={() => scrollTo(contactRef)}
+                  onClick={() => navigateTo("contact")}
                   className="border border-teal-400 text-teal-400 px-6 py-3.5 rounded font-bold hover:bg-teal-800 hover:text-white transition-all text-sm flex items-center justify-center gap-2 cursor-pointer"
                 >
                   Download Catalog
@@ -661,9 +646,14 @@ export default function App() {
               </div>
             </div>
           </div>
+
+          </div>
+
         </div>
+        )}
 
         {/* PRODUCTS SECTION */}
+        {activeSection === "products" && (
         <div ref={productsRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="flex justify-between items-end mb-8 border-b border-slate-200 pb-4">
             <div>
@@ -676,7 +666,7 @@ export default function App() {
                   ...prev,
                   message: "Dear Sales Team,\n\nI would like to request the complete product catalog and price list for Tedchem Cleaning Detergents.\n\nThank you."
                 }));
-                scrollTo(contactRef);
+                navigateTo("contact");
               }}
               className="text-teal-700 text-xs font-bold hover:underline uppercase tracking-wider cursor-pointer"
             >
@@ -774,6 +764,9 @@ export default function App() {
           )}
         </div>
 
+
+        )}
+
         {/* SPECIFICATIONS DETAIL MODAL */}
         <AnimatePresence>
           {selectedProduct && (
@@ -848,7 +841,7 @@ export default function App() {
                           ...prev,
                           message: `Dear Sales Team,\n\nI would like to request a quotation for your product: "${selectedProduct.name}". Please provide bulk pricing options, minimum order quantity, and delivery parameters.\n\nThank you.`
                         }));
-                        scrollTo(contactRef);
+                        navigateTo("contact");
                       }}
                       className="flex-1 bg-teal-700 hover:bg-teal-600 text-white text-xs font-bold uppercase tracking-wider py-3 px-4 rounded text-center transition-all shadow cursor-pointer"
                     >
@@ -867,7 +860,9 @@ export default function App() {
           )}
         </AnimatePresence>
 
+
         {/* ABOUT US SECTION */}
+        {activeSection === "about" && (
         <div ref={aboutRef} className="bg-slate-50 border-y border-slate-200 py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
@@ -938,7 +933,11 @@ export default function App() {
           </div>
         </div>
 
+
+        )}
+
         {/* CONTACT US SECTION */}
+        {activeSection === "contact" && (
         <div ref={contactRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="flex justify-between items-end mb-8 border-b border-slate-200 pb-4">
             <div>
@@ -1122,6 +1121,7 @@ export default function App() {
             </div>
           </div>
         </div>
+        )}
       </main>
 
       {/* FOOTER */}
@@ -1129,9 +1129,14 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8 pb-12 border-b border-slate-800 items-start">
             <div className="md:col-span-5 space-y-4">
-              <span className="font-bold text-sm tracking-widest text-white uppercase block">
-                {settings.companyName}
-              </span>
+              <div className="flex items-center space-x-3">
+                {settings.logoUrl && (
+                  <img src={settings.logoUrl} alt="Logo" className="h-8 w-8 object-contain bg-slate-50 p-1 rounded" />
+                )}
+                <span className="font-bold text-sm tracking-widest text-white uppercase block">
+                  {settings.companyName}
+                </span>
+              </div>
               <p className="text-slate-500 text-xs leading-relaxed max-w-sm font-sans">
                 Corporate manufacturers of certified cleaning detergents and premium hygiene solutions. Registered and compliant with national environmental, health, and skin safety codes.
               </p>

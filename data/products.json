@@ -64,5 +64,17 @@
     "name": "Industrial Sweeping Broom",
     "description": "Heavy-duty industrial sweeping broom featuring thick, durable bristles and a strong handle, designed to sweep large spaces and tough debris efficiently.",
     "imageUrl": "/uploads/broom.jpg"
+  },
+  {
+    "id": "prod_12",
+    "name": "Latex Gloves",
+    "description": "High-quality, durable latex gloves for medical, industrial, and general hygiene use. Provides excellent barrier protection and flexibility.",
+    "imageUrl": "/uploads/latex_gloves.jpg"
+  },
+  {
+    "id": "prod_13",
+    "name": "Disposable Face Masks",
+    "description": "3-ply disposable face masks offering reliable filtration and breathability. Suitable for personal and professional daily protection.",
+    "imageUrl": "/uploads/face_masks.jpg"
   }
 ]

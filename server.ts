@@ -83,7 +83,7 @@ if (fs.existsSync(imagesSrcDir)) {
 // 2. Initialize default settings if file doesn't exist
 if (!fs.existsSync(SETTINGS_FILE)) {
   const defaultSettings = {
-    logoUrl: fs.existsSync(path.join(UPLOADS_DIR, "tedchem_logo.svg")) ? "/uploads/tedchem_logo.svg" : "https://picsum.photos/seed/tedchem/200/200",
+    logoUrl: fs.existsSync(path.join(UPLOADS_DIR, "tedchem_logo.svg")) ? "/uploads/tedchem_logo_v2.svg" : "https://picsum.photos/seed/tedchem/200/200",
     companyName: "Tedchem Pvt Ltd",
     aboutUsText: "Tedchem Pvt Ltd is a premier manufacturer of high-quality cleaning detergents and hygiene solutions. Committed to safety, cleanliness, and superior quality assurance, we supply a range of certified bulk cleaning products, including Bacfix Thick Bleach, All Purpose Cleaner, Pine Gel, and Dishwashing Liquid. We serve corporate, retail, mining, and household sectors across the nation, ensuring reliable logistics and eco-friendly manufacturing standards.",
     address: "57 Herbert Chitepo Street",
@@ -162,6 +162,18 @@ if (!fs.existsSync(PRODUCTS_FILE)) {
       name: "Industrial Sweeping Broom",
       description: "Heavy-duty industrial sweeping broom featuring thick, durable bristles and a strong handle, designed to sweep large spaces and tough debris efficiently.",
       imageUrl: fs.existsSync(path.join(UPLOADS_DIR, "broom.jpg")) ? "/uploads/broom.jpg" : "https://picsum.photos/seed/broom/600/400"
+    },
+    {
+      id: "prod_12",
+      name: "Latex Gloves",
+      description: "High-quality, durable latex gloves for medical, industrial, and general hygiene use. Provides excellent barrier protection and flexibility.",
+      imageUrl: fs.existsSync(path.join(UPLOADS_DIR, "latex_gloves.jpg")) ? "/uploads/latex_gloves.jpg" : "https://picsum.photos/seed/gloves/600/400"
+    },
+    {
+      id: "prod_13",
+      name: "Disposable Face Masks",
+      description: "3-ply disposable face masks offering reliable filtration and breathability. Suitable for personal and professional daily protection.",
+      imageUrl: fs.existsSync(path.join(UPLOADS_DIR, "face_masks.jpg")) ? "/uploads/face_masks.jpg" : "https://picsum.photos/seed/masks/600/400"
     }
   ];
   fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(defaultProducts, null, 2), "utf8");

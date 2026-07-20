@@ -222,13 +222,30 @@ app.get("/api/settings", async (req, res) => {
   try {
     const s = await db.select().from(settings).limit(1);
     if (s.length > 0) {
+      let logoToReturn = s[0].logoUrl;
+      if (logoToReturn && logoToReturn.startsWith("/uploads/img_")) {
+        // Ephemeral file might be lost on Cloud Run restart
+        if (!fs.existsSync(path.join(process.cwd(), "data", logoToReturn))) {
+           logoToReturn = "/uploads/tedchem_logo_v2.svg";
+        }
+      }
+
       // parse phones back to array if it is stored as string
       res.json({
         ...s[0],
+        logoUrl: logoToReturn || "/uploads/tedchem_logo_v2.svg",
         phones: s[0].phones ? JSON.parse(s[0].phones) : []
       });
     } else {
-      res.json({});
+      res.json({
+        logoUrl: "/uploads/tedchem_logo_v2.svg",
+        companyName: "Tedchem Pvt Ltd",
+        aboutUsText: "Tedchem Pvt Ltd is a premier manufacturer of high-quality cleaning detergents and hygiene solutions. Committed to safety, cleanliness, and superior quality assurance, we supply a range of certified bulk cleaning products, including Bacfix Thick Bleach, All Purpose Cleaner, Pine Gel, and Dishwashing Liquid. We serve corporate, retail, mining, and household sectors across the nation, ensuring reliable logistics and eco-friendly manufacturing standards.",
+        address: "57 Herbert Chitepo Street, Mutare",
+        phones: ["+263773937863", "+263774266354"],
+        email: "tedchemzim8@gmail.com",
+        web3FormsKey: ""
+      });
     }
   } catch (error) {
     res.status(500).json({ error: "Failed to read settings data" });
@@ -273,7 +290,19 @@ app.post("/api/settings", requireAuth, async (req: AuthRequest, res) => {
 app.get("/api/products", async (req, res) => {
   try {
     const p = await db.select().from(products).orderBy(asc(products.id));
-    res.json(p);
+    
+    // Fix ephemeral local images
+    const fixedP = p.map(prod => {
+      let img = prod.imageUrl;
+      if (img && img.startsWith("/uploads/img_")) {
+        if (!fs.existsSync(path.join(process.cwd(), "data", img))) {
+           img = "https://picsum.photos/seed/cleaner/600/400"; // Generic fallback
+        }
+      }
+      return { ...prod, imageUrl: img };
+    });
+    
+    res.json(fixedP);
   } catch (error) {
     res.status(500).json({ error: "Failed to read products data" });
   }

@@ -439,7 +439,7 @@ export default function App() {
                     return (
                       <>
                         <span className="text-[#0000FF]">{name.substring(0, pvtIndex)}</span>
-                        <span className="font-light text-[#0000FF]">{name.substring(pvtIndex)}</span>
+                        <span className="text-[#0000FF]">{name.substring(pvtIndex)}</span>
                       </>
                     );
                   }

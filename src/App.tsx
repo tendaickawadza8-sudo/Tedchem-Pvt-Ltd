@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
+import { signInWithPopup } from 'firebase/auth';
+import { auth, googleAuthProvider } from './lib/firebase.ts';
 import { motion, AnimatePresence } from "motion/react";
 import {
   FlaskConical,
@@ -79,6 +81,7 @@ export default function App() {
   // Admin State
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminPassword, setAdminPassword] = useState("");
+  const [idToken, setIdToken] = useState("");
   const [loginError, setLoginError] = useState("");
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
@@ -146,7 +149,7 @@ export default function App() {
     if (!isAdmin) return;
     try {
       const res = await fetch("/api/inquiries", {
-        headers: { "x-admin-password": "Tedchem2026!" }
+        headers: { "Authorization": "Bearer " + idToken }
       });
       if (res.ok) {
         const data = await res.json();
@@ -175,14 +178,15 @@ export default function App() {
   const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError("");
-
-    if (adminPassword === "Tedchem2026!") {
+    try {
+      const result = await signInWithPopup(auth, googleAuthProvider);
+      const token = await result.user.getIdToken();
+      setIdToken(token);
       setIsAdmin(true);
       setShowLoginModal(false);
       setShowAdminPanel(true);
-      setAdminPassword("");
-    } else {
-      setLoginError("Incorrect password. Please try again.");
+    } catch (err: any) {
+      setLoginError(err.message || "Authentication failed. Please try again.");
     }
   };
 
@@ -215,7 +219,7 @@ export default function App() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-password": "Tedchem2026!"
+          "Authorization": "Bearer " + idToken
         },
         body: JSON.stringify({
           companyName: editCompanyName,
@@ -259,7 +263,7 @@ export default function App() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-password": "Tedchem2026!"
+          "Authorization": "Bearer " + idToken
         },
         body: JSON.stringify({
           name: newProdName,
@@ -299,7 +303,7 @@ export default function App() {
       const res = await fetch(`/api/products/${id}`, {
         method: "DELETE",
         headers: {
-          "x-admin-password": "Tedchem2026!"
+          "Authorization": "Bearer " + idToken
         }
       });
 
@@ -1213,31 +1217,11 @@ export default function App() {
               </div>
 
               <form onSubmit={handleAdminLogin} className="space-y-4">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Access Password</label>
-                  <input
-                    type="password"
-                    required
-                    value={adminPassword}
-                    onChange={(e) => setAdminPassword(e.target.value)}
-                    placeholder="Enter admin password"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded text-xs focus:ring-1 focus:ring-teal-600 focus:border-teal-600 outline-none"
-                    autoFocus
-                  />
-                </div>
-
-                {loginError && (
-                  <div className="p-3 bg-rose-50 text-rose-800 text-xs rounded flex items-center gap-2 border border-rose-200">
-                    <AlertCircle className="w-4 h-4 text-rose-500 flex-shrink-0" />
-                    <span>{loginError}</span>
-                  </div>
-                )}
-
                 <button
                   type="submit"
-                  className="w-full bg-teal-700 hover:bg-teal-600 text-white font-bold uppercase tracking-wider py-3 px-4 rounded transition-all cursor-pointer text-xs"
+                  className="w-full bg-teal-900 text-white font-bold py-3 rounded uppercase tracking-wider text-xs hover:bg-teal-800 transition-colors shadow-md"
                 >
-                  Verify Access Password
+                  Sign in with Google
                 </button>
               </form>
             </motion.div>

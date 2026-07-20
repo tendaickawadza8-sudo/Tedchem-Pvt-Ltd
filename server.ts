@@ -13,9 +13,11 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 // Storage configuration paths
 const DATA_DIR = path.join(process.cwd(), "data");
 const UPLOADS_DIR = path.join(DATA_DIR, "uploads");
-const SETTINGS_FILE = path.join(DATA_DIR, "settings.json");
-const PRODUCTS_FILE = path.join(DATA_DIR, "products.json");
-const INQUIRIES_FILE = path.join(DATA_DIR, "inquiries.json");
+
+import { db } from "./src/db/index.ts";
+import { settings, products, inquiries } from "./src/db/schema.ts";
+import { eq, desc, asc } from "drizzle-orm";
+import { requireAuth, AuthRequest } from "./src/middleware/auth.ts";
 
 // Ensure data and uploads directory exist
 if (!fs.existsSync(DATA_DIR)) {
@@ -89,7 +91,7 @@ if (fs.existsSync(imagesSrcDir)) {
 }
 
 // 2. Initialize default settings if file doesn't exist
-if (!fs.existsSync(SETTINGS_FILE)) {
+/* if (!fs.existsSync(SETTINGS_FILE)) {
   const defaultSettings = {
     logoUrl: fs.existsSync(path.join(UPLOADS_DIR, "tedchem_logo.svg")) ? "/uploads/tedchem_logo_v2.svg" : "https://picsum.photos/seed/tedchem/200/200",
     companyName: "Tedchem Pvt Ltd",
@@ -100,10 +102,10 @@ if (!fs.existsSync(SETTINGS_FILE)) {
     web3FormsKey: "" // Can be added by the admin to enable Web3Forms direct email alerts!
   };
   fs.writeFileSync(SETTINGS_FILE, JSON.stringify(defaultSettings, null, 2), "utf8");
-}
+} */
 
 // 3. Initialize default products if file doesn't exist
-if (!fs.existsSync(PRODUCTS_FILE)) {
+/* if (!fs.existsSync(PRODUCTS_FILE)) {
   const defaultProducts = [
     {
       id: "prod_1",
@@ -185,12 +187,12 @@ if (!fs.existsSync(PRODUCTS_FILE)) {
     }
   ];
   fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(defaultProducts, null, 2), "utf8");
-}
+} */
 
 // 4. Initialize empty inquiries file if it doesn't exist
-if (!fs.existsSync(INQUIRIES_FILE)) {
+/* if (!fs.existsSync(INQUIRIES_FILE)) {
   fs.writeFileSync(INQUIRIES_FILE, JSON.stringify([], null, 2), "utf8");
-}
+} */
 
 // Helper to save a Base64 image to local uploads folder
 function saveBase64Image(base64Data: string): string {
@@ -206,122 +208,112 @@ function saveBase64Image(base64Data: string): string {
   return `/uploads/${filename}`;
 }
 
-// Admin authorization middleware
-function authorizeAdmin(req: express.Request, res: express.Response, next: express.NextFunction) {
-  const password = req.headers["x-admin-password"] || req.body.adminPassword;
-  if (password === "Tedchem2026!") {
-    next();
-  } else {
-    res.status(401).json({ error: "Unauthorized. Invalid admin password." });
-  }
-}
+
 
 // Serve uploaded media statically
 app.use("/uploads", express.static(UPLOADS_DIR));
 
 // ==================== API ENDPOINTS ====================
 
-// Admin login verification
-app.post("/api/login", (req, res) => {
-  const { password } = req.body;
-  if (password === "Tedchem2026!") {
-    res.json({ success: true, message: "Authentication successful" });
-  } else {
-    res.status(401).json({ success: false, error: "Incorrect password" });
-  }
-});
+
 
 // GET site settings
-app.get("/api/settings", (req, res) => {
+app.get("/api/settings", async (req, res) => {
   try {
-    const data = fs.readFileSync(SETTINGS_FILE, "utf8");
-    res.json(JSON.parse(data));
+    const s = await db.select().from(settings).limit(1);
+    if (s.length > 0) {
+      // parse phones back to array if it is stored as string
+      res.json({
+        ...s[0],
+        phones: s[0].phones ? JSON.parse(s[0].phones) : []
+      });
+    } else {
+      res.json({});
+    }
   } catch (error) {
     res.status(500).json({ error: "Failed to read settings data" });
   }
 });
 
 // UPDATE site settings (requires admin password)
-app.post("/api/settings", authorizeAdmin, (req, res) => {
+app.post("/api/settings", requireAuth, async (req: AuthRequest, res) => {
   try {
-    const currentSettings = JSON.parse(fs.readFileSync(SETTINGS_FILE, "utf8"));
+    const s = await db.select().from(settings).limit(1);
+    const currentSettings = s[0] || {};
     const { companyName, aboutUsText, address, phones, email, web3FormsKey, logoData } = req.body;
-
+    
     let logoUrl = currentSettings.logoUrl;
     if (logoData && logoData.startsWith("data:")) {
       logoUrl = saveBase64Image(logoData);
     }
-
+    
     const updatedSettings = {
-      ...currentSettings,
       companyName: companyName !== undefined ? companyName : currentSettings.companyName,
       aboutUsText: aboutUsText !== undefined ? aboutUsText : currentSettings.aboutUsText,
       address: address !== undefined ? address : currentSettings.address,
-      phones: phones !== undefined ? phones : currentSettings.phones,
+      phones: phones !== undefined ? JSON.stringify(phones) : currentSettings.phones,
       email: email !== undefined ? email : currentSettings.email,
       web3FormsKey: web3FormsKey !== undefined ? web3FormsKey : currentSettings.web3FormsKey,
       logoUrl
     };
 
-    fs.writeFileSync(SETTINGS_FILE, JSON.stringify(updatedSettings, null, 2), "utf8");
-    res.json({ success: true, settings: updatedSettings });
+    if (s.length > 0) {
+      await db.update(settings).set(updatedSettings).where(eq(settings.id, s[0].id));
+    } else {
+      await db.insert(settings).values(updatedSettings);
+    }
+    
+    res.json({ success: true, settings: { ...updatedSettings, phones: phones !== undefined ? phones : JSON.parse(currentSettings.phones || "[]") } });
   } catch (error: any) {
     res.status(500).json({ error: error.message || "Failed to save settings data" });
   }
 });
 
 // GET products catalog
-app.get("/api/products", (req, res) => {
+app.get("/api/products", async (req, res) => {
   try {
-    const data = fs.readFileSync(PRODUCTS_FILE, "utf8");
-    res.json(JSON.parse(data));
+    const p = await db.select().from(products).orderBy(asc(products.id));
+    res.json(p);
   } catch (error) {
     res.status(500).json({ error: "Failed to read products data" });
   }
 });
 
 // ADD product (requires admin password)
-app.post("/api/products", authorizeAdmin, (req, res) => {
+app.post("/api/products", requireAuth, async (req: AuthRequest, res) => {
   try {
     const { name, description, imageData } = req.body;
     if (!name || !description) {
       return res.status(400).json({ error: "Product name and description are required" });
     }
-
+    
     let imageUrl = "https://picsum.photos/seed/product/600/400";
     if (imageData && imageData.startsWith("data:")) {
       imageUrl = saveBase64Image(imageData);
     }
-
-    const products = JSON.parse(fs.readFileSync(PRODUCTS_FILE, "utf8"));
-    const newProduct = {
-      id: `prod_${Date.now()}`,
+    
+    const newProduct = await db.insert(products).values({
       name,
       description,
       imageUrl
-    };
-
-    products.unshift(newProduct); // Add to the top of the list
-    fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(products, null, 2), "utf8");
-    res.json({ success: true, product: newProduct });
+    }).returning();
+    
+    res.json({ success: true, product: newProduct[0] });
   } catch (error: any) {
     res.status(500).json({ error: error.message || "Failed to add product" });
   }
 });
 
 // DELETE product (requires admin password)
-app.delete("/api/products/:id", authorizeAdmin, (req, res) => {
+app.delete("/api/products/:id", requireAuth, async (req: AuthRequest, res) => {
   try {
     const { id } = req.params;
-    let products = JSON.parse(fs.readFileSync(PRODUCTS_FILE, "utf8"));
-    const initialLength = products.length;
-    products = products.filter((p: any) => p.id !== id);
-
-    if (products.length === initialLength) {
+    const result = await db.delete(products).where(eq(products.id, parseInt(id))).returning();
+    
+    if (result.length === 0) {
       return res.status(404).json({ error: "Product not found" });
     }
-
-    fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(products, null, 2), "utf8");
+    
     res.json({ success: true, message: "Product deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: "Failed to delete product" });
@@ -329,36 +321,30 @@ app.delete("/api/products/:id", authorizeAdmin, (req, res) => {
 });
 
 // GET customer inquiries (requires admin password)
-app.get("/api/inquiries", authorizeAdmin, (req, res) => {
+app.get("/api/inquiries", requireAuth, async (req: AuthRequest, res) => {
   try {
-    const data = fs.readFileSync(INQUIRIES_FILE, "utf8");
-    res.json(JSON.parse(data));
+    const i = await db.select().from(inquiries).orderBy(desc(inquiries.createdAt));
+    res.json(i);
   } catch (error) {
     res.status(500).json({ error: "Failed to read inquiries" });
   }
 });
 
 // SUBMIT customer inquiry (public endpoint)
-app.post("/api/inquiries", (req, res) => {
+app.post("/api/inquiries", async (req, res) => {
   try {
     const { name, email, phone, message } = req.body;
     if (!name || !email || !message) {
       return res.status(400).json({ error: "Name, email, and message are required" });
     }
-
-    const inquiries = JSON.parse(fs.readFileSync(INQUIRIES_FILE, "utf8"));
-    const newInquiry = {
-      id: `inq_${Date.now()}`,
+    
+    const newInquiry = await db.insert(inquiries).values({
       name,
       email,
-      phone: phone || "Not provided",
-      message,
-      submittedAt: new Date().toISOString()
-    };
-
-    inquiries.unshift(newInquiry);
-    fs.writeFileSync(INQUIRIES_FILE, JSON.stringify(inquiries, null, 2), "utf8");
-    res.json({ success: true, inquiry: newInquiry });
+      message
+    }).returning();
+    
+    res.json({ success: true, inquiry: newInquiry[0] });
   } catch (error) {
     res.status(500).json({ error: "Failed to submit inquiry" });
   }

@@ -239,12 +239,12 @@ app.get("/api/settings", async (req, res) => {
 app.post("/api/settings", requireAuth, async (req: AuthRequest, res) => {
   try {
     const s = await db.select().from(settings).limit(1);
-    const currentSettings = s[0] || {};
+    const currentSettings: any = s[0] || {};
     const { companyName, aboutUsText, address, phones, email, web3FormsKey, logoData } = req.body;
     
     let logoUrl = currentSettings.logoUrl;
     if (logoData && logoData.startsWith("data:")) {
-      logoUrl = saveBase64Image(logoData);
+      logoUrl = logoData;
     }
     
     const updatedSettings = {
@@ -289,7 +289,7 @@ app.post("/api/products", requireAuth, async (req: AuthRequest, res) => {
     
     let imageUrl = "https://picsum.photos/seed/product/600/400";
     if (imageData && imageData.startsWith("data:")) {
-      imageUrl = saveBase64Image(imageData);
+      imageUrl = imageData;
     }
     
     const newProduct = await db.insert(products).values({

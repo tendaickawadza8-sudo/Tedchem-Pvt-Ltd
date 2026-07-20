@@ -31,7 +31,7 @@ if (!fs.existsSync(UPLOADS_DIR)) {
 const imagesSrcDir = path.join(process.cwd(), "src", "assets", "images");
 if (fs.existsSync(imagesSrcDir)) {
   const files = fs.readdirSync(imagesSrcDir);
-  const logoFile = files.find(f => f.startsWith("tedchem_logo"));
+  const logoFile = files.find(f => f.startsWith("tedchem_logo_v2"));
   const thickBleachFile = files.find(f => f.startsWith("thick_bleach"));
   const allPurposeFile = files.find(f => f.startsWith("all_purpose_cleaner"));
   const pineGelFile = files.find(f => f.startsWith("pine_gel"));
@@ -47,7 +47,7 @@ if (fs.existsSync(imagesSrcDir)) {
   const faceMasksFile = files.find(f => f.startsWith("box_of_face_masks"));
 
   if (logoFile) {
-    fs.copyFileSync(path.join(imagesSrcDir, logoFile), path.join(UPLOADS_DIR, "tedchem_logo.svg"));
+    fs.copyFileSync(path.join(imagesSrcDir, logoFile), path.join(UPLOADS_DIR, "tedchem_logo_v2.svg"));
   }
   if (thickBleachFile) {
     fs.copyFileSync(path.join(imagesSrcDir, thickBleachFile), path.join(UPLOADS_DIR, "thick_bleach.jpg"));
@@ -93,7 +93,7 @@ if (fs.existsSync(imagesSrcDir)) {
 // 2. Initialize default settings if file doesn't exist
 /* if (!fs.existsSync(SETTINGS_FILE)) {
   const defaultSettings = {
-    logoUrl: fs.existsSync(path.join(UPLOADS_DIR, "tedchem_logo.svg")) ? "/uploads/tedchem_logo_v2.svg" : "https://picsum.photos/seed/tedchem/200/200",
+    logoUrl: fs.existsSync(path.join(UPLOADS_DIR, "tedchem_logo_v2.svg")) ? "/uploads/tedchem_logo_v2.svg" : "https://picsum.photos/seed/tedchem/200/200",
     companyName: "Tedchem Pvt Ltd",
     aboutUsText: "Tedchem Pvt Ltd is a premier manufacturer of high-quality cleaning detergents and hygiene solutions. Committed to safety, cleanliness, and superior quality assurance, we supply a range of certified bulk cleaning products, including Bacfix Thick Bleach, All Purpose Cleaner, Pine Gel, and Dishwashing Liquid. We serve corporate, retail, mining, and household sectors across the nation, ensuring reliable logistics and eco-friendly manufacturing standards.",
     address: "57 Herbert Chitepo Street",

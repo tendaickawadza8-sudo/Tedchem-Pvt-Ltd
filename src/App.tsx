@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import React, { useState, useEffect, useRef } from "react";
 import { signInWithPopup } from 'firebase/auth';
 import { auth, googleAuthProvider } from './lib/firebase.ts';
@@ -397,8 +398,23 @@ export default function App() {
     );
   }
 
+
+  const pageTitles: Record<string, string> = {
+    home: "Home",
+    products: "Products",
+    about: "About Us",
+    contact: "Contact Us",
+    admin: "Admin Dashboard"
+  };
+  const activeTitle = pageTitles[activeSection] || "Home";
+  const docTitle = `${settings.companyName} - ${activeTitle}`;
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans flex flex-col justify-between selection:bg-teal-600 selection:text-white">
+      <Helmet>
+        <title>{docTitle}</title>
+        <meta name="description" content={settings.aboutUsText || "Premium manufacturer of cleaning detergents and hygiene solutions."} />
+      </Helmet>
       {/* Dynamic Announcement Bar */}
       <div className="bg-slate-900 text-slate-300 py-2 px-4 text-xs font-mono border-b border-slate-800 flex justify-between items-center z-50 relative">
         <div className="flex items-center space-x-4 max-w-7xl mx-auto w-full justify-between">

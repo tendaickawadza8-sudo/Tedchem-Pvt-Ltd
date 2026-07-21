@@ -1,7 +1,5 @@
 import { Helmet } from "react-helmet-async";
 import React, { useState, useEffect, useRef } from "react";
-import { signInWithPopup } from 'firebase/auth';
-import { auth, googleAuthProvider } from './lib/firebase.ts';
 import { motion, AnimatePresence } from "motion/react";
 import {
   FlaskConical,
@@ -180,14 +178,23 @@ export default function App() {
     e.preventDefault();
     setLoginError("");
     try {
-      const result = await signInWithPopup(auth, googleAuthProvider);
-      const token = await result.user.getIdToken();
-      setIdToken(token);
-      setIsAdmin(true);
-      setShowLoginModal(false);
-      setShowAdminPanel(true);
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: adminPassword })
+      });
+      const data = await res.json();
+      if (res.ok && data.token) {
+        setIdToken(data.token);
+        setIsAdmin(true);
+        setShowLoginModal(false);
+        setShowAdminPanel(true);
+        setAdminPassword(""); // Clear password
+      } else {
+        setLoginError(data.error || "Authentication failed.");
+      }
     } catch (err: any) {
-      setLoginError(err.message || "Authentication failed. Please try again.");
+      setLoginError("Network error. Please try again.");
     }
   };
 
@@ -1233,11 +1240,24 @@ export default function App() {
               </div>
 
               <form onSubmit={handleAdminLogin} className="space-y-4">
+                {loginError && (
+                  <div className="bg-red-50 text-red-600 p-3 rounded text-sm text-center font-medium">
+                    {loginError}
+                  </div>
+                )}
+                <input
+                  type="password"
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  placeholder="Enter Admin Password"
+                  className="w-full bg-slate-50 border border-slate-200 text-slate-800 px-4 py-3 rounded text-sm focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+                  required
+                />
                 <button
                   type="submit"
                   className="w-full bg-teal-900 text-white font-bold py-3 rounded uppercase tracking-wider text-xs hover:bg-teal-800 transition-colors shadow-md"
                 >
-                  Sign in with Google
+                  Sign In
                 </button>
               </form>
             </motion.div>

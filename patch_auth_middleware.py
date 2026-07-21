@@ -1,4 +1,6 @@
-import { Request, Response, NextFunction } from 'express';
+import sys
+
+content = """import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
 export interface AuthRequest extends Request {
@@ -27,3 +29,7 @@ export const requireAuth = async (
     return res.status(401).json({ error: 'Unauthorized: Invalid token' });
   }
 };
+"""
+
+with open('src/middleware/auth.ts', 'w') as f:
+    f.write(content)

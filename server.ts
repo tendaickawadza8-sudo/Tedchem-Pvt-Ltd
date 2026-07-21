@@ -1,4 +1,5 @@
 import express from "express";
+import jwt from "jsonwebtoken";
 import path from "path";
 import fs from "fs";
 import { createServer as createViteServer } from "vite";
@@ -214,6 +215,19 @@ function saveBase64Image(base64Data: string): string {
 app.use("/uploads", express.static(UPLOADS_DIR));
 
 // ==================== API ENDPOINTS ====================
+
+const JWT_SECRET = process.env.JWT_SECRET || "tedchem_secure_secret_2026";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "tedchem2026";
+
+app.post("/api/login", (req, res) => {
+  const { password } = req.body;
+  if (password === ADMIN_PASSWORD) {
+    const token = jwt.sign({ role: "admin" }, JWT_SECRET, { expiresIn: "24h" });
+    return res.json({ token });
+  }
+  return res.status(401).json({ error: "Invalid password" });
+});
+
 
 
 

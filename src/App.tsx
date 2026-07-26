@@ -56,6 +56,12 @@ interface Inquiry {
   submittedAt: string;
 }
 
+const WhatsAppIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+  </svg>
+);
+
 export default function App() {
   // Global State
   const [settings, setSettings] = useState<Settings>({
@@ -80,6 +86,8 @@ export default function App() {
   // Admin State
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminPassword, setAdminPassword] = useState("");
+  const [loginStep, setLoginStep] = useState<"password" | "2fa">("password");
+  const [adminCode, setAdminCode] = useState("");
   const [idToken, setIdToken] = useState("");
   const [loginError, setLoginError] = useState("");
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -178,18 +186,33 @@ export default function App() {
     e.preventDefault();
     setLoginError("");
     try {
+      const payload: any = { password: adminPassword };
+      if (loginStep === "2fa") {
+        payload.code = adminCode;
+      }
+      
       const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: adminPassword })
+        body: JSON.stringify(payload)
       });
+      
       const data = await res.json();
+      
+      if (res.status === 202 && data.require2FA) {
+        setLoginStep("2fa");
+        setLoginError("");
+        return;
+      }
+      
       if (res.ok && data.token) {
         setIdToken(data.token);
         setIsAdmin(true);
         setShowLoginModal(false);
         setShowAdminPanel(true);
-        setAdminPassword(""); // Clear password
+        setAdminPassword(""); 
+        setAdminCode("");
+        setLoginStep("password");
       } else {
         setLoginError(data.error || "Authentication failed.");
       }
@@ -430,7 +453,21 @@ export default function App() {
             Global Distributor Portal Connected
           </span>
           <div className="hidden md:flex space-x-6">
-            <span className="flex items-center gap-1"><Phone className="w-3.5 h-3.5 text-teal-400" /> {settings.phones[0]}</span>
+            {settings.phones[0] && (
+              <span className="flex items-center gap-1">
+                {settings.phones[0].includes("263773937863") ? (
+                  <a href={`https://wa.me/${settings.phones[0].replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-teal-300 transition-colors">
+                    <WhatsAppIcon className="w-4 h-4 text-[#25D366]" />
+                    {settings.phones[0]}
+                  </a>
+                ) : (
+                  <a href={`tel:${settings.phones[0]}`} className="flex items-center gap-1 hover:text-teal-300 transition-colors">
+                    <Phone className="w-3.5 h-3.5 text-teal-400" />
+                    {settings.phones[0]}
+                  </a>
+                )}
+              </span>
+            )}
             <span className="flex items-center gap-1"><Mail className="w-3.5 h-3.5 text-teal-400" /> {settings.email}</span>
           </div>
         </div>
@@ -1011,13 +1048,27 @@ export default function App() {
                       <h4 className="text-[10px] font-mono uppercase tracking-wider text-teal-300">Direct Sales Line</h4>
                       <div className="space-y-1 mt-0.5">
                         {settings.phones.map((phone, i) => (
-                          <a
-                            key={i}
-                            href={`tel:${phone}`}
-                            className="block text-xs font-bold text-white hover:text-teal-300 transition-colors"
-                          >
-                            {phone}
-                          </a>
+                          <div key={i} className="flex items-center gap-2">
+                            {phone.includes("263773937863") ? (
+                              <a
+                                href={`https://wa.me/${phone.replace(/\D/g, '')}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center hover:opacity-80 transition-opacity"
+                                title="Chat on WhatsApp"
+                              >
+                                <WhatsAppIcon className="w-4 h-4 text-[#25D366]" />
+                              </a>
+                            ) : (
+                              <Phone className="w-4 h-4 text-teal-400" />
+                            )}
+                            <a
+                              href={`tel:${phone}`}
+                              className="block text-xs font-bold text-white hover:text-teal-300 transition-colors"
+                            >
+                              {phone}
+                            </a>
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -1172,7 +1223,28 @@ export default function App() {
             <div className="md:col-span-4 space-y-2 font-sans text-xs">
               <h4 className="font-bold text-white uppercase tracking-wider text-[10px]">Head Office Desk</h4>
               <p className="text-slate-500">{settings.address || "57 Herbert Chitepo Street"}</p>
-              <p className="text-slate-500">Tel: {settings.phones.join(" / ")}</p>
+              <div className="text-slate-500 flex flex-wrap items-center gap-x-2 gap-y-1">
+                <span>Tel:</span>
+                {settings.phones.map((phone, i) => (
+                  <span key={i} className="flex items-center gap-1">
+                    {phone.includes("263773937863") ? (
+                      <a
+                        href={`https://wa.me/${phone.replace(/\D/g, '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:opacity-80 transition-opacity flex-shrink-0"
+                        title="Chat on WhatsApp"
+                      >
+                        <WhatsAppIcon className="w-3 h-3 text-[#25D366]" />
+                      </a>
+                    ) : (
+                      <Phone className="w-3 h-3 text-slate-400 flex-shrink-0" />
+                    )}
+                    <a href={`tel:${phone}`} className="hover:text-teal-400 transition-colors">{phone}</a>
+                    {i < settings.phones.length - 1 && <span className="ml-1">/</span>}
+                  </span>
+                ))}
+              </div>
               <p className="text-slate-500">Email: {settings.email}</p>
             </div>
 
@@ -1245,20 +1317,53 @@ export default function App() {
                     {loginError}
                   </div>
                 )}
-                <input
-                  type="password"
-                  value={adminPassword}
-                  onChange={(e) => setAdminPassword(e.target.value)}
-                  placeholder="Enter Admin Password"
-                  className="w-full bg-slate-50 border border-slate-200 text-slate-800 px-4 py-3 rounded text-sm focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
-                  required
-                />
+                
+                {loginStep === "password" ? (
+                  <input
+                    type="password"
+                    value={adminPassword}
+                    onChange={(e) => setAdminPassword(e.target.value)}
+                    placeholder="Enter Admin Password"
+                    className="w-full bg-slate-50 border border-slate-200 text-slate-800 px-4 py-3 rounded text-sm focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+                    required
+                  />
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <label className="text-xs text-slate-500 font-semibold uppercase">2FA Authenticator Code</label>
+                      <span className="text-[10px] text-teal-600 bg-teal-50 px-2 py-0.5 rounded" title="Add this to Google Authenticator">Secret: JBSWY3DPEHPK3PXP</span>
+                    </div>
+                    <input
+                      type="text"
+                      value={adminCode}
+                      onChange={(e) => setAdminCode(e.target.value)}
+                      placeholder="6-digit code"
+                      className="w-full bg-slate-50 border border-slate-200 text-slate-800 px-4 py-3 rounded text-sm focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 text-center font-mono tracking-widest text-lg"
+                      required
+                      maxLength={6}
+                    />
+                  </div>
+                )}
+                
                 <button
                   type="submit"
-                  className="w-full bg-teal-900 text-white font-bold py-3 rounded uppercase tracking-wider text-xs hover:bg-teal-800 transition-colors shadow-md"
+                  className="w-full bg-teal-900 text-white font-bold py-3 rounded uppercase tracking-wider text-xs hover:bg-teal-800 transition-colors shadow-md flex justify-center items-center"
                 >
-                  Sign In
+                  {loginStep === "password" ? "Continue" : "Verify & Sign In"}
                 </button>
+                
+                {loginStep === "2fa" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLoginStep("password");
+                      setLoginError("");
+                    }}
+                    className="w-full text-xs text-slate-500 hover:text-slate-800 transition-colors"
+                  >
+                    Back to password
+                  </button>
+                )}
               </form>
             </motion.div>
           </div>

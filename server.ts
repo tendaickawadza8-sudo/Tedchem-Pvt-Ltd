@@ -1,5 +1,6 @@
 import express from "express";
 import jwt from "jsonwebtoken";
+import speakeasy from "speakeasy";
 import path from "path";
 import fs from "fs";
 import { createServer as createViteServer } from "vite";
@@ -219,13 +220,43 @@ app.use("/uploads", express.static(UPLOADS_DIR));
 const JWT_SECRET = process.env.JWT_SECRET || "tedchem_secure_secret_2026";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "tedchem2026";
 
+const ADMIN_TOTP_SECRET = process.env.ADMIN_TOTP_SECRET || "JBSWY3DPEHPK3PXP";
+
+console.log("\n=======================================================");
+console.log("🛡️  ADMIN 2FA TOTP SECRET:", ADMIN_TOTP_SECRET);
+console.log("Use Google Authenticator, Authy, or any TOTP app to add this secret.");
+console.log("=======================================================\n");
+
 app.post("/api/login", (req, res) => {
-  const { password } = req.body;
-  if (password === ADMIN_PASSWORD) {
-    const token = jwt.sign({ role: "admin" }, JWT_SECRET, { expiresIn: "24h" });
-    return res.json({ token });
+  const { password, code } = req.body;
+  
+  if (password !== ADMIN_PASSWORD) {
+    return res.status(401).json({ error: "Invalid password" });
   }
-  return res.status(401).json({ error: "Invalid password" });
+
+  if (!code) {
+    return res.status(202).json({ require2FA: true, message: "Please enter your 2FA code." });
+  }
+
+  console.log("Checking 2FA Code:", code, "against secret:", ADMIN_TOTP_SECRET);
+  try {
+    const isValid = speakeasy.totp.verify({
+      secret: ADMIN_TOTP_SECRET,
+      encoding: 'base32',
+      token: code,
+      window: 1 // Allow 1 step (30 seconds) before or after
+    });
+    console.log("IsValid:", isValid);
+    
+    if (!isValid) {
+      return res.status(401).json({ error: "Invalid 2FA code" });
+    }
+  } catch (err) {
+    return res.status(401).json({ error: "Error verifying 2FA code" });
+  }
+
+  const token = jwt.sign({ role: "admin" }, JWT_SECRET, { expiresIn: "24h" });
+  return res.json({ token });
 });
 
 

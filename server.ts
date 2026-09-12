@@ -378,6 +378,36 @@ app.post("/api/products", requireAuth, async (req: AuthRequest, res) => {
   }
 });
 
+// UPDATE product (requires admin password)
+app.put("/api/products/:id", requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, imageData } = req.body;
+    if (!name || !description) {
+      return res.status(400).json({ error: "Product name and description are required" });
+    }
+        
+    const updateData: any = { name, description };
+    if (imageData) {
+      if (imageData.startsWith("data:")) {
+        updateData.imageUrl = imageData;
+      } else {
+        updateData.imageUrl = imageData; // Allow URL strings too
+      }
+    }
+
+    const updatedProduct = await db.update(products).set(updateData).where(eq(products.id, parseInt(id))).returning();
+    
+    if (updatedProduct.length === 0) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+        
+    res.json({ success: true, product: updatedProduct[0] });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || "Failed to update product" });
+  }
+});
+
 // DELETE product (requires admin password)
 app.delete("/api/products/:id", requireAuth, async (req: AuthRequest, res) => {
   try {

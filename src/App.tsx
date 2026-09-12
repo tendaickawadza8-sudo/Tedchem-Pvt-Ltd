@@ -106,6 +106,7 @@ export default function App() {
   const [newProdName, setNewProdName] = useState("");
   const [newProdDesc, setNewProdDesc] = useState("");
   const [newProdImageBase64, setNewProdImageBase64] = useState<string | null>(null);
+  const [editingProductId, setEditingProductId] = useState<number | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [adminMessage, setAdminMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -278,7 +279,7 @@ export default function App() {
     }
   };
 
-  // Add Product
+  // Add or Update Product
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newProdName || !newProdDesc) {
@@ -289,9 +290,13 @@ export default function App() {
     setActionLoading(true);
     setAdminMessage(null);
 
+    const isEditing = editingProductId !== null;
+    const url = isEditing ? `/api/products/${editingProductId}` : "/api/products";
+    const method = isEditing ? "PUT" : "POST";
+
     try {
-      const res = await fetch("/api/products", {
-        method: "POST",
+      const res = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer " + idToken
@@ -305,17 +310,23 @@ export default function App() {
 
       const data = await res.json();
       if (res.ok) {
-        setProducts(prev => [data.product, ...prev]);
+        if (isEditing) {
+          setProducts(prev => prev.map(p => p.id === editingProductId ? data.product : p));
+          setAdminMessage({ type: "success", text: `Product "${data.product.name}" updated successfully!` });
+          setEditingProductId(null);
+        } else {
+          setProducts(prev => [data.product, ...prev]);
+          setAdminMessage({ type: "success", text: `Product "${data.product.name}" added successfully!` });
+        }
+        
         setNewProdName("");
         setNewProdDesc("");
         setNewProdImageBase64(null);
         // Reset file inputs manually
         const fileInput = document.getElementById("prod-img-input") as HTMLInputElement;
         if (fileInput) fileInput.value = "";
-
-        setAdminMessage({ type: "success", text: `Product "${data.product.name}" added successfully!` });
       } else {
-        setAdminMessage({ type: "error", text: data.error || "Failed to add product." });
+        setAdminMessage({ type: "error", text: data.error || `Failed to ${isEditing ? 'update' : 'add'} product.` });
       }
     } catch (err) {
       setAdminMessage({ type: "error", text: "Server connection failed." });
@@ -323,6 +334,24 @@ export default function App() {
       setActionLoading(false);
     }
   };
+  
+  const handleEditProductClick = (product: Product) => {
+    setEditingProductId(product.id);
+    setNewProdName(product.name);
+    setNewProdDesc(product.description);
+    setNewProdImageBase64(product.imageUrl);
+    window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll up to the form
+  };
+  
+  const handleCancelEdit = () => {
+    setEditingProductId(null);
+    setNewProdName("");
+    setNewProdDesc("");
+    setNewProdImageBase64(null);
+    const fileInput = document.getElementById("prod-img-input") as HTMLInputElement;
+    if (fileInput) fileInput.value = "";
+  };
+  
 
   // Delete Product
   const handleDeleteProduct = async (id: string) => {
@@ -1595,7 +1624,9 @@ export default function App() {
                     {/* Add Product Card */}
                     <div className="max-w-3xl bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 space-y-6">
                       <div>
-                        <h3 className="font-display font-bold text-lg text-slate-900">Add New Cleaning or Detergent Product</h3>
+                        <h3 className="font-display font-bold text-lg text-slate-900">
+                          {editingProductId ? "Edit Product" : "Add New Cleaning or Detergent Product"}
+                        </h3>
                         <p className="text-xs text-slate-500">Add products with high-quality images, detailed formulations, and sizing details.</p>
                       </div>
 
@@ -1649,14 +1680,25 @@ export default function App() {
                           </div>
                         )}
 
-                        <button
-                          type="submit"
-                          disabled={actionLoading}
-                          className="bg-slate-900 hover:bg-slate-800 disabled:bg-slate-400 text-white font-semibold py-3 px-6 rounded-xl text-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
-                        >
-                          {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                          Add Product to Catalog
-                        </button>
+                        <div className="flex gap-4">
+                          <button
+                            type="submit"
+                            disabled={actionLoading}
+                            className="bg-slate-900 hover:bg-slate-800 disabled:bg-slate-400 text-white font-semibold py-3 px-6 rounded-xl text-sm flex items-center justify-center gap-2 transition-all cursor-pointer flex-1"
+                          >
+                            {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                            {editingProductId ? "Update Product" : "Add Product to Catalog"}
+                          </button>
+                          {editingProductId && (
+                            <button
+                              type="button"
+                              onClick={handleCancelEdit}
+                              className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-3 px-6 rounded-xl text-sm transition-all cursor-pointer"
+                            >
+                              Cancel
+                            </button>
+                          )}
+                        </div>
                       </form>
                     </div>
 
@@ -1689,12 +1731,22 @@ export default function App() {
                                   <div className="text-slate-500 text-xs line-clamp-1 mt-0.5">{product.description}</div>
                                 </td>
                                 <td className="p-4 text-right">
-                                  <button
-                                    onClick={() => handleDeleteProduct(product.id)}
-                                    className="bg-red-50 text-red-600 hover:bg-red-100 p-2.5 rounded-lg border border-red-150 transition-all cursor-pointer inline-flex items-center"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
+                                  <div className="flex justify-end gap-2">
+                                    <button
+                                      onClick={() => handleEditProductClick(product)}
+                                      className="bg-blue-50 text-blue-600 hover:bg-blue-100 p-2.5 rounded-lg border border-blue-150 transition-all cursor-pointer inline-flex items-center"
+                                      title="Edit Product"
+                                    >
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteProduct(product.id)}
+                                      className="bg-red-50 text-red-600 hover:bg-red-100 p-2.5 rounded-lg border border-red-150 transition-all cursor-pointer inline-flex items-center"
+                                      title="Delete Product"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </div>
                                 </td>
                               </tr>
                             ))}

@@ -333,6 +333,9 @@ app.post("/api/settings", requireAuth, async (req: AuthRequest, res) => {
 
 // GET products catalog
 app.get("/api/products", async (req, res) => {
+  res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
   try {
     const p = await db.select().from(products).orderBy(asc(products.id));
     
@@ -467,8 +470,9 @@ async function setupViteOrStatic() {
   } else {
     // Serve production static assets from dist/
     const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
+    app.use(express.static(distPath, { setHeaders: (res, path) => { if (path.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache'); } }));
     app.get("*", (req, res) => {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.sendFile(path.join(distPath, "index.html"));
     });
   }

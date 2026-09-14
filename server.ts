@@ -15,6 +15,8 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 // Storage configuration paths
 const DATA_DIR = path.join(process.cwd(), "data");
 const UPLOADS_DIR = path.join(DATA_DIR, "uploads");
+const PRODUCTS_FILE = path.join(DATA_DIR, "products.json");
+const SETTINGS_FILE = path.join(DATA_DIR, "settings.json");
 
 import { db } from "./src/db/index.ts";
 import { settings, products, inquiries } from "./src/db/schema.ts";
@@ -197,14 +199,14 @@ if (fs.existsSync(imagesSrcDir)) {
 } */
 
 // Helper to save a Base64 image to local uploads folder
-function saveBase64Image(base64Data: string): string {
+function saveBase64Image(base64Data: string, prefix = "img"): string {
   const matches = base64Data.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
   if (!matches || matches.length !== 3) {
     throw new Error("Invalid base64 image data");
   }
   const ext = matches[1].split("/")[1] || "png";
   const data = Buffer.from(matches[2], "base64");
-  const filename = `img_${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${ext}`;
+  const filename = `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${ext}`;
   const filepath = path.join(UPLOADS_DIR, filename);
   fs.writeFileSync(filepath, data);
   return `/uploads/${filename}`;
@@ -293,6 +295,9 @@ app.get("/api/settings", async (req, res) => {
         logoUrl: logoToReturn || "/uploads/tedchem_logo_v2.svg",
         phones: s[0].phones ? JSON.parse(s[0].phones) : []
       });
+    } else if (fs.existsSync(SETTINGS_FILE)) {
+      const fileSettings = JSON.parse(fs.readFileSync(SETTINGS_FILE, "utf8"));
+      res.json(fileSettings);
     } else {
       res.json({
         logoUrl: "/uploads/tedchem_logo_v2.svg",
@@ -305,6 +310,12 @@ app.get("/api/settings", async (req, res) => {
       });
     }
   } catch (error) {
+    if (fs.existsSync(SETTINGS_FILE)) {
+      try {
+        const fileSettings = JSON.parse(fs.readFileSync(SETTINGS_FILE, "utf8"));
+        return res.json(fileSettings);
+      } catch (e) {}
+    }
     res.status(500).json({ error: "Failed to read settings data" });
   }
 });
@@ -317,8 +328,12 @@ app.post("/api/settings", requireAuth, async (req: AuthRequest, res) => {
     const { companyName, aboutUsText, address, phones, email, web3FormsKey, logoData } = req.body;
     
     let logoUrl = currentSettings.logoUrl;
-    if (logoData && logoData.startsWith("data:")) {
-      logoUrl = logoData;
+    if (logoData) {
+      if (logoData.startsWith("data:")) {
+        logoUrl = saveBase64Image(logoData, "logo");
+      } else {
+        logoUrl = logoData;
+      }
     }
     
     const updatedSettings = {
@@ -336,6 +351,13 @@ app.post("/api/settings", requireAuth, async (req: AuthRequest, res) => {
     } else {
       await db.insert(settings).values(updatedSettings);
     }
+
+    try {
+      fs.writeFileSync(SETTINGS_FILE, JSON.stringify({
+        ...updatedSettings,
+        phones: phones !== undefined ? phones : JSON.parse(currentSettings.phones || "[]")
+      }, null, 2), "utf8");
+    } catch (e) {}
     
     res.json({ success: true, settings: { ...updatedSettings, phones: phones !== undefined ? phones : JSON.parse(currentSettings.phones || "[]") } });
   } catch (error: any) {
@@ -345,25 +367,42 @@ app.post("/api/settings", requireAuth, async (req: AuthRequest, res) => {
 
 // GET products catalog
 app.get("/api/products", async (req, res) => {
-  res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
   res.setHeader("Pragma", "no-cache");
   res.setHeader("Expires", "0");
   try {
     const p = await db.select().from(products).orderBy(asc(products.id));
     
-    // Fix ephemeral local images
-    const fixedP = p.map(prod => {
-      let img = prod.imageUrl;
-      if (img && img.startsWith("/uploads/img_")) {
-        if (!fs.existsSync(path.join(process.cwd(), "data", img))) {
-           img = "https://picsum.photos/seed/cleaner/600/400"; // Generic fallback
+    if (p && p.length > 0) {
+      // Fix ephemeral local images
+      const fixedP = p.map(prod => {
+        let img = prod.imageUrl;
+        if (img && img.startsWith("/uploads/img_")) {
+          if (!fs.existsSync(path.join(process.cwd(), "data", img))) {
+             img = "/uploads/thick_bleach.jpg";
+          }
         }
-      }
-      return { ...prod, imageUrl: img };
-    });
-    
-    res.json(fixedP);
+        return { ...prod, imageUrl: img };
+      });
+      
+      return res.json(fixedP);
+    }
+
+    // Fallback to data/products.json
+    if (fs.existsSync(PRODUCTS_FILE)) {
+      const fileProducts = JSON.parse(fs.readFileSync(PRODUCTS_FILE, "utf8"));
+      return res.json(fileProducts);
+    }
+
+    res.json([]);
   } catch (error) {
+    console.error("Database error in /api/products, using file fallback:", error);
+    if (fs.existsSync(PRODUCTS_FILE)) {
+      try {
+        const fileProducts = JSON.parse(fs.readFileSync(PRODUCTS_FILE, "utf8"));
+        return res.json(fileProducts);
+      } catch (e) {}
+    }
     res.status(500).json({ error: "Failed to read products data" });
   }
 });
@@ -376,16 +415,26 @@ app.post("/api/products", requireAuth, async (req: AuthRequest, res) => {
       return res.status(400).json({ error: "Product name and description are required" });
     }
     
-    let imageUrl = "https://picsum.photos/seed/product/600/400";
-    if (imageData && imageData.startsWith("data:")) {
-      imageUrl = imageData;
+    let imageUrl = "/uploads/thick_bleach.jpg";
+    if (imageData) {
+      if (imageData.startsWith("data:")) {
+        imageUrl = saveBase64Image(imageData, "prod");
+      } else {
+        imageUrl = imageData;
+      }
     }
     
     const newProduct = await db.insert(products).values({
-      name,
-      description,
+      name: name.trim(),
+      description: description.trim(),
       imageUrl
     }).returning();
+
+    // Sync to file
+    try {
+      const allP = await db.select().from(products).orderBy(asc(products.id));
+      fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(allP, null, 2), "utf8");
+    } catch (e) {}
     
     res.json({ success: true, product: newProduct[0] });
   } catch (error: any) {
@@ -402,12 +451,16 @@ app.put("/api/products/:id", requireAuth, async (req: AuthRequest, res) => {
       return res.status(400).json({ error: "Product name and description are required" });
     }
         
-    const updateData: any = { name, description };
+    const updateData: any = {
+      name: name.trim(),
+      description: description.trim(),
+      updatedAt: new Date()
+    };
     if (imageData) {
       if (imageData.startsWith("data:")) {
-        updateData.imageUrl = imageData;
+        updateData.imageUrl = saveBase64Image(imageData, "prod");
       } else {
-        updateData.imageUrl = imageData; // Allow URL strings too
+        updateData.imageUrl = imageData;
       }
     }
 
@@ -416,6 +469,12 @@ app.put("/api/products/:id", requireAuth, async (req: AuthRequest, res) => {
     if (updatedProduct.length === 0) {
       return res.status(404).json({ error: "Product not found" });
     }
+
+    // Sync to file
+    try {
+      const allP = await db.select().from(products).orderBy(asc(products.id));
+      fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(allP, null, 2), "utf8");
+    } catch (e) {}
         
     res.json({ success: true, product: updatedProduct[0] });
   } catch (error: any) {
@@ -432,6 +491,12 @@ app.delete("/api/products/:id", requireAuth, async (req: AuthRequest, res) => {
     if (result.length === 0) {
       return res.status(404).json({ error: "Product not found" });
     }
+
+    // Sync to file
+    try {
+      const allP = await db.select().from(products).orderBy(asc(products.id));
+      fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(allP, null, 2), "utf8");
+    } catch (e) {}
     
     res.json({ success: true, message: "Product deleted successfully" });
   } catch (error) {

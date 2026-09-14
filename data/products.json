@@ -1,80 +1,122 @@
 [
   {
-    "id": "prod_1",
-    "name": "Bacfix Thick Bleach",
-    "description": "Lemon Fresh Multipurpose Thick Bleach. Delivers powerful deep cleaning action to remove tough stains, eliminate germs, and leave toilet bowls and hard surfaces sparkling clean with a fresh lemon aroma.",
-    "imageUrl": "/uploads/thick_bleach.jpg"
-  },
-  {
-    "id": "prod_2",
+    "id": 2,
     "name": "Bacfix All Purpose Cleaner",
     "description": "Lemon scented premium all-purpose liquid cleaner. Highly effective multi-surface formula designed to lift grease, grime, and household dirt from floors, walls, kitchens, and bathrooms.",
-    "imageUrl": "/uploads/all_purpose_cleaner.jpg"
+    "imageUrl": "/uploads/all_purpose_cleaner.jpg",
+    "createdAt": "2026-07-20T07:40:50.763Z",
+    "updatedAt": "2026-07-20T07:40:50.763Z"
   },
   {
-    "id": "prod_3",
-    "name": "Bacfix Pine Gel",
-    "description": "High-quality concentrated antiseptic pine gel cleaner. Formulated with natural pine oil to sanitize, clean, and deodorize surfaces in hospitals, schools, homes, and offices.",
-    "imageUrl": "/uploads/pine_gel.jpg"
-  },
-  {
-    "id": "prod_4",
-    "name": "Bacfix Dishwashing Liquid",
-    "description": "Premium grease-cutting Hand Wash and dishwashing liquid with a fresh lemon scent. Gently formulated yet ultra-concentrated to cut through tough oils, fat, and food residues, leaving your plates and cookware sparkling clean.",
-    "imageUrl": "/uploads/dishwashing_liquid.jpg"
-  },
-  {
-    "id": "prod_5",
+    "id": 5,
     "name": "Bacfix Deodorant Blocks",
     "description": "Effective deodorizer blocks (72 tablets). Eliminates odours from urinals, gym lockers, closets, and storage sheds.",
-    "imageUrl": "/uploads/deodorant_blocks.jpg"
+    "imageUrl": "/uploads/deodorant_blocks.jpg",
+    "createdAt": "2026-07-20T07:40:51.183Z",
+    "updatedAt": "2026-07-20T07:40:51.183Z"
   },
   {
-    "id": "prod_6",
+    "id": 6,
     "name": "Bacfix Toilet Cleaner 25L",
     "description": "Heavy-duty 25L industrial toilet cleaner. Powerful formula designed to remove stubborn stains, lime scale, and rust from toilet bowls and urinals while killing germs and leaving a fresh scent.",
-    "imageUrl": "/uploads/toilet_cleaner.jpg"
+    "imageUrl": "/uploads/toilet_cleaner.jpg",
+    "createdAt": "2026-07-20T07:40:51.324Z",
+    "updatedAt": "2026-07-20T07:40:51.324Z"
   },
   {
-    "id": "prod_7",
+    "id": 7,
     "name": "Bacfix Washing Powder 25kg",
     "description": "Heavy-duty 25kg industrial washing powder. Powerful stain-removing formula that deep cleans clothes, removes tough stains, and leaves fabrics smelling fresh. Ideal for commercial laundries, hotels, and large households.",
-    "imageUrl": "/uploads/washing_powder.jpg"
+    "imageUrl": "/uploads/washing_powder.jpg",
+    "createdAt": "2026-07-20T07:40:51.463Z",
+    "updatedAt": "2026-07-20T07:40:51.463Z"
   },
   {
-    "id": "prod_8",
+    "id": 8,
     "name": "Bacfix Bleach 25L",
     "description": "Heavy-duty 25L industrial bleach. Powerful formula for bleaching, disinfecting, and sanitizing. Kills 99.9% of germs and bacteria, leaving surfaces bright and hygienic.",
-    "imageUrl": "/uploads/bacfix_bleach.jpg"
+    "imageUrl": "/uploads/bacfix_bleach.jpg",
+    "createdAt": "2026-07-20T07:40:51.604Z",
+    "updatedAt": "2026-07-20T07:40:51.604Z"
   },
   {
-    "id": "prod_9",
+    "id": 9,
     "name": "Bacfix White Floor Polish Wax 20L",
     "description": "Premium 20L white floor polish wax paste. Provides a durable, high-gloss protective finish for all sealed hard floors. Scuff and slip-resistant formula that keeps floors looking brilliant.",
-    "imageUrl": "/uploads/white_floor_polish_wax.jpg"
+    "imageUrl": "/uploads/white_floor_polish_wax.jpg",
+    "createdAt": "2026-07-20T07:40:51.745Z",
+    "updatedAt": "2026-07-20T07:40:51.745Z"
   },
   {
-    "id": "prod_10",
+    "id": 10,
     "name": "Industrial Cleaning Mop",
     "description": "Heavy-duty industrial cleaning mop with highly absorbent cotton/microfiber head and a sturdy handle, ideal for commercial cleaning and large floor surfaces.",
-    "imageUrl": "/uploads/mop.jpg"
+    "imageUrl": "/uploads/mop.jpg",
+    "createdAt": "2026-07-20T07:40:51.885Z",
+    "updatedAt": "2026-07-20T07:40:51.885Z"
   },
   {
-    "id": "prod_11",
+    "id": 11,
     "name": "Industrial Sweeping Broom",
     "description": "Heavy-duty industrial sweeping broom featuring thick, durable bristles and a strong handle, designed to sweep large spaces and tough debris efficiently.",
-    "imageUrl": "/uploads/broom.jpg"
+    "imageUrl": "/uploads/broom.jpg",
+    "createdAt": "2026-07-20T07:40:52.025Z",
+    "updatedAt": "2026-07-20T07:40:52.025Z"
   },
   {
-    "id": "prod_12",
+    "id": 12,
     "name": "Latex Gloves",
     "description": "High-quality, durable latex gloves for medical, industrial, and general hygiene use. Provides excellent barrier protection and flexibility.",
-    "imageUrl": "/uploads/latex_gloves_v2.jpg"
+    "imageUrl": "/uploads/latex_gloves_v2.jpg",
+    "createdAt": "2026-07-20T07:40:52.165Z",
+    "updatedAt": "2026-07-20T07:40:52.165Z"
   },
   {
-    "id": "prod_13",
+    "id": 13,
     "name": "Disposable Face Masks",
     "description": "3-ply disposable face masks offering reliable filtration and breathability. Suitable for personal and professional daily protection.",
-    "imageUrl": "/uploads/face_masks_v2.jpg"
+    "imageUrl": "/uploads/face_masks_v2.jpg",
+    "createdAt": "2026-07-20T07:40:52.304Z",
+    "updatedAt": "2026-07-20T07:40:52.304Z"
+  },
+  {
+    "id": 1,
+    "name": "Bacfix Thick Bleach",
+    "description": "Lemon Fresh Multipurpose Thick Bleach. Delivers powerful deep cleaning action to remove tough stains, eliminate germs, and leave toilet bowls and hard surfaces sparkling clean with a fresh lemon aroma.",
+    "imageUrl": "/uploads/thick_bleach.jpg",
+    "createdAt": "2026-07-20T07:40:50.623Z",
+    "updatedAt": "2026-07-20T07:40:50.623Z"
+  },
+  {
+    "id": 3,
+    "name": "Bacfix Pine Gel",
+    "description": "High-quality concentrated antiseptic pine gel cleaner. Formulated with natural pine oil to sanitize, clean, and deodorize surfaces in hospitals, schools, homes, and offices.",
+    "imageUrl": "/uploads/prod_3.png",
+    "createdAt": "2026-07-20T07:40:50.903Z",
+    "updatedAt": "2026-07-20T07:40:50.903Z"
+  },
+  {
+    "id": 4,
+    "name": "Bacfix Dishwashing Liquid",
+    "description": "Premium grease-cutting Hand Wash and dishwashing liquid with a fresh lemon scent. Gently formulated yet ultra-concentrated to cut through tough oils, fat, and food residues, leaving your plates and cookware sparkling clean.",
+    "imageUrl": "/uploads/prod_4.png",
+    "createdAt": "2026-07-20T07:40:51.044Z",
+    "updatedAt": "2026-07-20T07:40:51.044Z"
+  },
+  {
+    "id": 14,
+    "name": "Bacfix Tile Cleaner 2L",
+    "description": "Tile Cleaner for cleaning Tile. Highly effective formula to remove dirt, grease, and soap scum, restoring shine to ceramic and floor tiles.",
+    "imageUrl": "/uploads/prod_14.png",
+    "createdAt": "2026-09-12T07:14:03.094Z",
+    "updatedAt": "2026-09-12T07:14:03.094Z"
+  },
+  {
+    "id": 15,
+    "name": "Bacfix Tile Cleaner 5L",
+    "description": "Perfumed Tile Cleaner for cleaning Tiles. Bulk commercial formula with a fresh lasting fragrance, perfect for homes, offices, and institutions.",
+    "imageUrl": "/uploads/prod_15.png",
+    "createdAt": "2026-09-12T19:39:23.646Z",
+    "updatedAt": "2026-09-12T19:39:23.646Z"
   }
 ]

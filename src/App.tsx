@@ -28,6 +28,7 @@ import {
   ChevronRight,
   Send
 } from "lucide-react";
+import { defaultProducts } from "./data/defaultProducts";
 
 // Interfaces
 interface Product {
@@ -63,17 +64,17 @@ const WhatsAppIcon = ({ className }: { className?: string }) => (
 );
 
 export default function App() {
-  // Global State
+  // Global State initialized with resilient defaults
   const [settings, setSettings] = useState<Settings>({
     logoUrl: "/uploads/tedchem_logo_v2.svg?v=2",
     companyName: "Tedchem Pvt Ltd",
-    aboutUsText: "",
-    address: "",
-    phones: [],
-    email: "",
+    aboutUsText: "Tedchem Pvt Ltd is a premier manufacturer of high-quality cleaning detergents and hygiene solutions. Committed to safety, cleanliness, and superior quality assurance, we supply a range of certified bulk cleaning products, including Bacfix Thick Bleach, All Purpose Cleaner, Pine Gel, and Dishwashing Liquid. We serve corporate, retail, mining, and household sectors across the nation, ensuring reliable logistics and eco-friendly manufacturing standards.",
+    address: "57 Herbert Chitepo Street, Mutare",
+    phones: ["+263773937863", "+263774266354"],
+    email: "tedchemzim8@gmail.com",
     web3FormsKey: ""
   });
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<Product[]>(defaultProducts);
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
@@ -93,19 +94,44 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
-  // Sync section with URL hash changes
+  // Sync active section with URL hash changes
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace("#", "").toLowerCase();
       if (["products", "catalog"].includes(hash)) setActiveSection("products");
       else if (["about", "about-us"].includes(hash)) setActiveSection("about");
       else if (["contact", "contact-us"].includes(hash)) setActiveSection("contact");
-      else if (["admin"].includes(hash)) setActiveSection("admin");
-      else if (hash === "home" || hash === "") setActiveSection("home");
+      else if (["admin"].includes(hash)) {
+        setActiveSection("admin");
+        setShowAdminPanel(true);
+      } else if (hash === "home" || hash === "") setActiveSection("home");
     };
 
     window.addEventListener("hashchange", handleHashChange);
     return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
+
+  // Update active navigation item on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPos = window.scrollY + 250;
+      const contactEl = document.getElementById("contact");
+      const aboutEl = document.getElementById("about");
+      const productsEl = document.getElementById("products");
+
+      if (contactEl && scrollPos >= contactEl.offsetTop) {
+        setActiveSection("contact");
+      } else if (aboutEl && scrollPos >= aboutEl.offsetTop) {
+        setActiveSection("about");
+      } else if (productsEl && scrollPos >= productsEl.offsetTop) {
+        setActiveSection("products");
+      } else {
+        setActiveSection("home");
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   // Admin State
@@ -156,16 +182,25 @@ export default function App() {
       const settingsData = await settingsRes.json();
       const productsData = await productsRes.json();
 
-      setSettings(settingsData);
-      setProducts(productsData);
+      if (settingsData && !settingsData.error) {
+        setSettings(prev => ({
+          ...prev,
+          ...settingsData,
+          logoUrl: settingsData.logoUrl || prev.logoUrl
+        }));
 
-      // Pre-fill admin form settings
-      setEditCompanyName(settingsData.companyName);
-      setEditAboutUs(settingsData.aboutUsText);
-      setEditAddress(settingsData.address);
-      setEditPhones(settingsData.phones.join(", "));
-      setEditEmail(settingsData.email);
-      setEditWeb3Key(settingsData.web3FormsKey || "");
+        // Pre-fill admin form settings
+        setEditCompanyName(settingsData.companyName || "");
+        setEditAboutUs(settingsData.aboutUsText || "");
+        setEditAddress(settingsData.address || "");
+        setEditPhones(Array.isArray(settingsData.phones) ? settingsData.phones.join(", ") : "");
+        setEditEmail(settingsData.email || "");
+        setEditWeb3Key(settingsData.web3FormsKey || "");
+      }
+
+      if (Array.isArray(productsData) && productsData.length > 0) {
+        setProducts(productsData);
+      }
     } catch (error) {
       console.error("Error loading Tedchem data:", error);
     } finally {
@@ -175,6 +210,17 @@ export default function App() {
 
   useEffect(() => {
     fetchData();
+
+    // Scroll to initial hash if present
+    if (typeof window !== "undefined" && window.location.hash) {
+      const targetSection = window.location.hash.replace("#", "").toLowerCase();
+      setTimeout(() => {
+        const el = document.getElementById(targetSection);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 300);
+    }
   }, []);
 
   // Fetch inquiries when logged in as admin
@@ -203,8 +249,17 @@ export default function App() {
     setMobileMenuOpen(false);
     setActiveSection(section);
     if (typeof window !== "undefined") {
-      window.location.hash = section;
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      history.pushState(null, "", `#${section}`);
+      if (section === "home") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else {
+        const el = document.getElementById(section);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        } else {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      }
     }
   };
 
@@ -688,10 +743,8 @@ export default function App() {
       </AnimatePresence>
 
       <main className="flex-grow">
-        {/* HOME SECTION */}
-        {activeSection === "home" && (
-        <div ref={homeRef}>
-          {/* HERO SECTION */}
+        {/* HERO SECTION */}
+        <section id="home" ref={homeRef}>
           <div className="relative bg-slate-900 text-white py-24 sm:py-32 overflow-hidden">
           {/* Subtle industrial blueprint decorative lines */}
           <div className="absolute inset-0 opacity-10 pointer-events-none">
@@ -766,79 +819,23 @@ export default function App() {
               </div>
             </div>
           </div>
-
           </div>
+        </section>
 
-        {/* CORE PRODUCTS CATALOG PREVIEW ON HOME PAGE */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 bg-slate-50 border-b border-slate-200">
+        {/* PRODUCTS SECTION - Directly accessible on Landing Page */}
+        <section id="products" ref={productsRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 border-b border-slate-200">
           <div className="flex flex-col sm:flex-row justify-between sm:items-end mb-8 border-b border-slate-200 pb-4 gap-4">
             <div>
-              <span className="text-xs font-mono font-bold uppercase tracking-widest text-teal-600">Active Product Catalog</span>
-              <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 font-display tracking-tight mt-1">Our Core Products & Detergents</h2>
-              <p className="text-slate-600 text-xs sm:text-sm mt-1">Explore our certified commercial, mining, and household cleaning supplies ({products.length} active products).</p>
-            </div>
-            <button
-              onClick={() => navigateTo("products")}
-              className="text-teal-700 hover:text-teal-900 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer group"
-            >
-              <span>Search Full Catalog</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {products.map((product) => (
-              <div
-                key={`home-prod-${product.id}`}
-                className="border border-slate-200 bg-white p-4 rounded-lg shadow-sm hover:border-teal-400 transition-all hover:shadow-md flex flex-col justify-between group"
-              >
-                <div>
-                  <div className="relative w-full h-64 bg-slate-50 rounded mb-4 overflow-hidden flex items-center justify-center border border-slate-100 p-4 transition-all duration-300 group-hover:bg-white">
-                    <img
-                      src={product.imageUrl}
-                      alt={product.name}
-                      className="max-h-full max-w-full object-contain group-hover:scale-105 transition-all duration-300"
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="absolute top-2.5 right-2.5 bg-teal-850/95 text-white text-[8px] uppercase font-bold tracking-widest px-2 py-0.5 rounded shadow-sm">
-                      Corporate Grade
-                    </div>
-                  </div>
-
-                  <div className="space-y-1 mb-4">
-                    <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider line-clamp-1">
-                      {product.name}
-                    </h3>
-                    <p className="text-xs text-slate-500 leading-snug line-clamp-3">
-                      {product.description}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="pt-3 border-t border-slate-100">
-                  <button
-                    onClick={() => setSelectedProduct(product)}
-                    className="w-full bg-slate-50 hover:bg-teal-700 hover:text-white text-slate-700 text-xs py-2 rounded font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1 cursor-pointer border border-slate-200 hover:border-teal-700"
-                  >
-                    <span>View Specifications</span>
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono font-bold uppercase tracking-widest text-teal-600">Product Portfolio</span>
+                <span className="bg-teal-100 text-teal-800 text-[10px] font-bold px-2 py-0.5 rounded-full font-mono">
+                  {products.length} Products
+                </span>
               </div>
-            ))}
-          </div>
-        </div>
-
-        </div>
-        )}
-
-        {/* PRODUCTS SECTION */}
-        {activeSection === "products" && (
-        <div ref={productsRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="flex justify-between items-end mb-8 border-b border-slate-200 pb-4">
-            <div>
-              <span className="text-xs font-mono font-bold uppercase tracking-widest text-teal-600">Product Portfolio</span>
-              <h2 className="text-3xl font-bold text-slate-800 font-display tracking-tight mt-1">Our Core Products</h2>
+              <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 font-display tracking-tight mt-1">Our Core Products & Detergents</h2>
+              <p className="text-slate-600 text-xs sm:text-sm mt-1 max-w-3xl">
+                Explore our certified range of high-grade cleaning detergents and disinfectants designed to ensure safety, pristine cleanliness, and superior hygiene across commercial, mining, and household sectors in Zimbabwe.
+              </p>
             </div>
             <button
               onClick={() => {
@@ -848,7 +845,7 @@ export default function App() {
                 }));
                 navigateTo("contact");
               }}
-              className="text-teal-700 text-xs font-bold hover:underline uppercase tracking-wider cursor-pointer"
+              className="text-teal-700 text-xs font-bold hover:underline uppercase tracking-wider cursor-pointer whitespace-nowrap"
             >
               Request Full Catalog
             </button>
@@ -942,10 +939,7 @@ export default function App() {
               </button>
             </div>
           )}
-        </div>
-
-
-        )}
+        </section>
 
         {/* SPECIFICATIONS DETAIL MODAL */}
         <AnimatePresence>
@@ -1042,8 +1036,7 @@ export default function App() {
 
 
         {/* ABOUT US SECTION */}
-        {activeSection === "about" && (
-        <div ref={aboutRef} className="bg-slate-50 border-y border-slate-200 py-20">
+        <section id="about" ref={aboutRef} className="bg-slate-50 border-y border-slate-200 py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
               {/* Decorative graphic panel */}
@@ -1111,14 +1104,10 @@ export default function App() {
               </div>
             </div>
           </div>
-        </div>
-
-
-        )}
+        </section>
 
         {/* CONTACT US SECTION */}
-        {activeSection === "contact" && (
-        <div ref={contactRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <section id="contact" ref={contactRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="flex justify-between items-end mb-8 border-b border-slate-200 pb-4">
             <div>
               <span className="text-xs font-mono font-bold uppercase tracking-widest text-teal-600">Procurement and Sales Inquiry</span>
@@ -1314,8 +1303,7 @@ export default function App() {
               </form>
             </div>
           </div>
-        </div>
-        )}
+        </section>
       </main>
 
       {/* FOOTER */}

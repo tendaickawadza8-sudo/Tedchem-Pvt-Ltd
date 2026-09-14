@@ -31,7 +31,7 @@ import {
 
 // Interfaces
 interface Product {
-  id: string;
+  id: string | number;
   name: string;
   description: string;
   imageUrl: string;
@@ -79,9 +79,34 @@ export default function App() {
   const [loading, setLoading] = useState(true);
 
   // Nav & UI State
-  const [activeSection, setActiveSection] = useState("home");
+  const getInitialSection = () => {
+    if (typeof window === "undefined") return "home";
+    const hash = window.location.hash.replace("#", "").toLowerCase();
+    if (["products", "catalog"].includes(hash)) return "products";
+    if (["about", "about-us"].includes(hash)) return "about";
+    if (["contact", "contact-us"].includes(hash)) return "contact";
+    if (["admin"].includes(hash)) return "admin";
+    return "home";
+  };
+
+  const [activeSection, setActiveSection] = useState(getInitialSection);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+  // Sync section with URL hash changes
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace("#", "").toLowerCase();
+      if (["products", "catalog"].includes(hash)) setActiveSection("products");
+      else if (["about", "about-us"].includes(hash)) setActiveSection("about");
+      else if (["contact", "contact-us"].includes(hash)) setActiveSection("contact");
+      else if (["admin"].includes(hash)) setActiveSection("admin");
+      else if (hash === "home" || hash === "") setActiveSection("home");
+    };
+
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
 
   // Admin State
   const [isAdmin, setIsAdmin] = useState(false);
@@ -125,8 +150,8 @@ export default function App() {
   const fetchData = async () => {
     try {
       const [settingsRes, productsRes] = await Promise.all([
-        fetch(`/api/settings?t=${Date.now()}`),
-        fetch(`/api/products?t=${Date.now()}`)
+        fetch(`/api/settings?t=${Date.now()}`, { cache: "no-store" }),
+        fetch(`/api/products?t=${Date.now()}`, { cache: "no-store" })
       ]);
       const settingsData = await settingsRes.json();
       const productsData = await productsRes.json();
@@ -174,12 +199,13 @@ export default function App() {
     }
   }, [isAdmin]);
 
-
-
   const navigateTo = (section: string) => {
     setMobileMenuOpen(false);
     setActiveSection(section);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (typeof window !== "undefined") {
+      window.location.hash = section;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
 
   // Admin Actions
@@ -310,13 +336,14 @@ export default function App() {
 
       const data = await res.json();
       if (res.ok) {
+        // Refetch latest state directly from server database
+        await fetchData();
+
         if (isEditing) {
-          setProducts(prev => prev.map(p => p.id === editingProductId ? data.product : p));
-          setAdminMessage({ type: "success", text: `Product "${data.product.name}" updated successfully!` });
+          setAdminMessage({ type: "success", text: `Product "${data.product?.name || newProdName}" updated successfully!` });
           setEditingProductId(null);
         } else {
-          setProducts(prev => [data.product, ...prev]);
-          setAdminMessage({ type: "success", text: `Product "${data.product.name}" added successfully!` });
+          setAdminMessage({ type: "success", text: `Product "${data.product?.name || newProdName}" added successfully!` });
         }
         
         setNewProdName("");
@@ -336,7 +363,7 @@ export default function App() {
   };
   
   const handleEditProductClick = (product: Product) => {
-    setEditingProductId(product.id);
+    setEditingProductId(Number(product.id));
     setNewProdName(product.name);
     setNewProdDesc(product.description);
     setNewProdImageBase64(product.imageUrl);
@@ -354,7 +381,7 @@ export default function App() {
   
 
   // Delete Product
-  const handleDeleteProduct = async (id: string) => {
+  const handleDeleteProduct = async (id: string | number) => {
     if (!confirm("Are you sure you want to delete this product? This change is permanent and visible globally.")) return;
     setActionLoading(true);
     setAdminMessage(null);
@@ -369,7 +396,7 @@ export default function App() {
 
       const data = await res.json();
       if (res.ok) {
-        setProducts(prev => prev.filter(p => p.id !== id));
+        await fetchData();
         setAdminMessage({ type: "success", text: "Product deleted globally!" });
       } else {
         setAdminMessage({ type: "error", text: data.error || "Failed to delete product." });
@@ -742,6 +769,66 @@ export default function App() {
 
           </div>
 
+        {/* CORE PRODUCTS CATALOG PREVIEW ON HOME PAGE */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 bg-slate-50 border-b border-slate-200">
+          <div className="flex flex-col sm:flex-row justify-between sm:items-end mb-8 border-b border-slate-200 pb-4 gap-4">
+            <div>
+              <span className="text-xs font-mono font-bold uppercase tracking-widest text-teal-600">Active Product Catalog</span>
+              <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 font-display tracking-tight mt-1">Our Core Products & Detergents</h2>
+              <p className="text-slate-600 text-xs sm:text-sm mt-1">Explore our certified commercial, mining, and household cleaning supplies ({products.length} active products).</p>
+            </div>
+            <button
+              onClick={() => navigateTo("products")}
+              className="text-teal-700 hover:text-teal-900 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer group"
+            >
+              <span>Search Full Catalog</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {products.map((product) => (
+              <div
+                key={`home-prod-${product.id}`}
+                className="border border-slate-200 bg-white p-4 rounded-lg shadow-sm hover:border-teal-400 transition-all hover:shadow-md flex flex-col justify-between group"
+              >
+                <div>
+                  <div className="relative w-full h-64 bg-slate-50 rounded mb-4 overflow-hidden flex items-center justify-center border border-slate-100 p-4 transition-all duration-300 group-hover:bg-white">
+                    <img
+                      src={product.imageUrl}
+                      alt={product.name}
+                      className="max-h-full max-w-full object-contain group-hover:scale-105 transition-all duration-300"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="absolute top-2.5 right-2.5 bg-teal-850/95 text-white text-[8px] uppercase font-bold tracking-widest px-2 py-0.5 rounded shadow-sm">
+                      Corporate Grade
+                    </div>
+                  </div>
+
+                  <div className="space-y-1 mb-4">
+                    <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider line-clamp-1">
+                      {product.name}
+                    </h3>
+                    <p className="text-xs text-slate-500 leading-snug line-clamp-3">
+                      {product.description}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-slate-100">
+                  <button
+                    onClick={() => setSelectedProduct(product)}
+                    className="w-full bg-slate-50 hover:bg-teal-700 hover:text-white text-slate-700 text-xs py-2 rounded font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1 cursor-pointer border border-slate-200 hover:border-teal-700"
+                  >
+                    <span>View Specifications</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         </div>
         )}
 
@@ -884,7 +971,7 @@ export default function App() {
                     <X className="w-4 h-4" />
                   </button>
                   <div className="absolute bottom-4 left-4 bg-teal-850/95 text-white font-mono uppercase text-[10px] tracking-widest font-bold py-1 px-3 rounded shadow-sm">
-                    Sourcing Code: {selectedProduct.id.toUpperCase()}
+                    Sourcing Code: {String(selectedProduct.id).toUpperCase()}
                   </div>
                 </div>
 

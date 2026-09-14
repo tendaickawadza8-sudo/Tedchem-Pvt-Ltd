@@ -212,8 +212,20 @@ function saveBase64Image(base64Data: string): string {
 
 
 
+// Disable ETag to prevent 304 Not Modified caching issues on dynamic data
+app.set("etag", false);
+
 // Serve uploaded media statically
 app.use("/uploads", express.static(UPLOADS_DIR));
+
+// Middleware to prevent any caching on all API routes
+app.use("/api", (req, res, next) => {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  res.setHeader("Surrogate-Control", "no-store");
+  next();
+});
 
 // ==================== API ENDPOINTS ====================
 
